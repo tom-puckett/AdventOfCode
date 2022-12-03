@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-
-namespace Day3
+﻿namespace Day3
 {
     internal class Program
     {
@@ -14,8 +12,8 @@ namespace Day3
             int part1TotalPriorities = 0;
             foreach (var rucksack in rucksackList)
             {
-                char intersection = rucksack.compartment1.Intersect(rucksack.compartment2).Single();
-                part1TotalPriorities += GetPriority(intersection);
+                char commonItem = rucksack.compartment1.Intersect(rucksack.compartment2).Single();
+                part1TotalPriorities += GetPriority(commonItem);
             }
             Console.WriteLine($"Total of all priorities for part 1 is {part1TotalPriorities}");
             #endregion
@@ -25,14 +23,13 @@ namespace Day3
             for (int readCount = 0; readCount < rucksackList.Count; readCount += 3)
             {
                 List<string> elfGroup = new();
-                for (int i = 0; i < 3; i++)
+                foreach (var rucksack in new[] { rucksackList[readCount], rucksackList[readCount+1], rucksackList[readCount+2] })
                 {
-                    var rucksack = rucksackList[readCount+i];
                     elfGroup.Add(rucksack.compartment1 + rucksack.compartment2);
                 }
 
-                char intersection = elfGroup[0].Intersect(elfGroup[1]).Intersect(elfGroup[2]).Single();
-                part2TotalPriorities += GetPriority(intersection);
+                char commonItem = elfGroup[0].Intersect(elfGroup[1]).Intersect(elfGroup[2]).Single();
+                part2TotalPriorities += GetPriority(commonItem);
             }
             Console.WriteLine($"Total of all priorities for part 2 is {part2TotalPriorities}");
             #endregion
@@ -40,15 +37,9 @@ namespace Day3
 
         internal static List<(string,string)> ReadData(string path = "")
         {
-
             List<(string, string)> returnList = new();
 
-            IEnumerable<string> dataSource = 
-                path == ""
-                ? new List<string> { "vJrwpWtwJgWrhcsFMMfFFhFp", "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL" }
-                : File.ReadLines(path);
-
-            foreach (string line in dataSource.Where(ln => !string.IsNullOrWhiteSpace(ln)))
+            foreach (string line in File.ReadLines(path).Where(ln => !string.IsNullOrWhiteSpace(ln)))
             {
                 string trimmedLine = line.Trim();
                 int trimmedLineLength = trimmedLine.Length;
