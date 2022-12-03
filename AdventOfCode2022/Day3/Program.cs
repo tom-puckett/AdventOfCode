@@ -8,17 +8,34 @@ namespace Day3
 
         static void Main(string[] args)
         {
-            List<(string compartment1, string compartment2)> returnList = ReadData("Inventory.txt");
+            List<(string compartment1, string compartment2)> rucksackList = ReadData("Inventory.txt");
 
-            int totalPriorities = 0;
-            foreach (var rucksack in returnList)
+            #region Part 1
+            int part1TotalPriorities = 0;
+            foreach (var rucksack in rucksackList)
             {
                 char intersection = rucksack.compartment1.Intersect(rucksack.compartment2).Single();
-                int priority = GetPriority(intersection);
-                totalPriorities += priority;
-                Console.WriteLine($"{intersection}, {priority}");
+                part1TotalPriorities += GetPriority(intersection);
             }
-            Console.WriteLine($"Total of all priorities is {totalPriorities}");
+            Console.WriteLine($"Total of all priorities for part 1 is {part1TotalPriorities}");
+            #endregion
+
+            #region Part 2
+            int part2TotalPriorities = 0;
+            for (int readCount = 0; readCount < rucksackList.Count; readCount += 3)
+            {
+                List<string> elfGroup = new();
+                for (int i = 0; i < 3; i++)
+                {
+                    var rucksack = rucksackList[readCount+i];
+                    elfGroup.Add(rucksack.compartment1 + rucksack.compartment2);
+                }
+
+                char intersection = elfGroup[0].Intersect(elfGroup[1]).Intersect(elfGroup[2]).Single();
+                part2TotalPriorities += GetPriority(intersection);
+            }
+            Console.WriteLine($"Total of all priorities for part 2 is {part2TotalPriorities}");
+            #endregion
         }
 
         internal static List<(string,string)> ReadData(string path = "")
