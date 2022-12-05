@@ -33,11 +33,7 @@
                 }
             }
 
-            string result1 = string.Empty;
-            foreach (var stack in Stacks.OrderBy(s => s.Key))
-            {
-                result1 += stack.Value.Peek();
-            }
+            string result1 = Stacks.OrderBy(s => s.Key).Aggregate(string.Empty, (result, next) => result + next.Value.Peek());
             #endregion
 
             #region Part 2
@@ -58,11 +54,7 @@
                 }
             }
 
-            string result2 = string.Empty;
-            foreach (var stack in Stacks.OrderBy(s => s.Key))
-            {
-                result2 += stack.Value.Peek();
-            }
+            string result2 = Stacks.OrderBy(s => s.Key).Aggregate(string.Empty, (result, next) => result + next.Value.Peek());
             #endregion
 
             Console.WriteLine($"Part 1 result is {result1}");
