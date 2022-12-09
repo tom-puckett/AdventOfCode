@@ -50,7 +50,7 @@ namespace Day7
             Console.WriteLine($"There are {smallDirSizes.Select(d => d.Key).Distinct().Count()} small directories with total size {smallDirSizes.Sum(d => d.Value)}");
             #endregion
 
-            #region Part 1
+            #region Part 2
             long currentEmptySpace = 70_000_000 - fs.Root.GetContainedFilesSize();
             long requiredAdditionalSpace = 30_000_000 - currentEmptySpace;
 
