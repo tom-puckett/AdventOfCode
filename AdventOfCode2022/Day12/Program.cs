@@ -182,7 +182,7 @@ namespace Day12
                 Action<RankedCoordinate> DocumentPath = pos => { };
                 DocumentPath = pos =>
                 {
-                    //Console.WriteLine($"Coordinates {pos.Row},{pos.Col}, elevation {pos.Elevation}");
+                    Console.WriteLine($"Coordinates {pos.Row},{pos.Col}, elevation {pos.Elevation}, steps from end position {pos.Score}");
                     if (pos.Predecessor is not null)
                     {
                         DocumentPath(pos.Predecessor);
@@ -192,9 +192,11 @@ namespace Day12
                 if (reachablePositions.Any(m => m.Coordinates == start))
                 {
                     RankedCoordinate FoundStart = reachablePositions.First(m => m.Coordinates == start);
+                    DocumentPath.Invoke(FoundStart);
 
                     RankedCoordinate FirstA = reachablePositions.First(m => (int)m.Elevation == (int)Elevation.a);
                     DocumentPath.Invoke(FoundStart);
+
                     RankedCoordinate[][]? MapFromStart = Map.Clone() as RankedCoordinate[][];
                     char[][] fileContents = new char[0][];
                     foreach (Elevation[] line in Map)
@@ -222,14 +224,16 @@ namespace Day12
                         Console.SetCursorPosition(position.Col, position.Row);
                         Console.Write('1');
                         redCoordinates.Add(position);
-                        Thread.Sleep(1);
+                        //Thread.Sleep(1);
                     }
                     for (RankedCoordinate position = FirstA; position is not null; position = position.Predecessor)
                     {
+                        var enc = Console.OutputEncoding;
+                        Console.OutputEncoding = System.Text.UnicodeEncoding.Default;
                         Console.SetCursorPosition(position.Col, position.Row);
                         Console.BackgroundColor = redCoordinates.Contains(position) ? ConsoleColor.DarkYellow : ConsoleColor.Green;
-                        Console.Write(redCoordinates.Contains(position) ? '+' : '2');
-                        Thread.Sleep(1);
+                        Console.Write(redCoordinates.Contains(position) ? '\u00BD' : '2');
+                        //Thread.Sleep(1);
                     }
 
                     Console.BackgroundColor = ConsoleColor.Black;
