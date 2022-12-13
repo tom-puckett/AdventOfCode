@@ -91,7 +91,7 @@ namespace Day12
             if (obj1 is null && obj2 is null) return true;
             if (obj1 is null) return false;
             if (obj2 is null) return false;
-            return obj1 == obj2;
+            return obj1.Row == obj2.Row && obj1.Col == obj2.Col;
         }
 
         public int GetHashCode(Coordinates obj)
@@ -113,7 +113,7 @@ namespace Day12
 
         internal int Score { get; init; } = -1;
         internal Elevation Elevation { get; set; }
-        internal RankedCoordinate Predecessor { get; set; }
+        internal RankedCoordinate? Predecessor { get; set; }
 
         internal Coordinates Coordinates => this;
     }
@@ -121,13 +121,13 @@ namespace Day12
     internal class Program
     {
         internal static Elevation[][] Map = new Elevation[0][];
+        internal static List<RankedCoordinate> reachablePositions = new List<RankedCoordinate>();
 
         static void Main(string[] args)
         {
             Console.BackgroundColor = ConsoleColor.Black;
             Console.Clear();
 
-            List<RankedCoordinate> reachablePositions = new List<RankedCoordinate>();
             RankedCoordinate start = new RankedCoordinate();
             RankedCoordinate end = new RankedCoordinate();
 
@@ -152,24 +152,30 @@ namespace Day12
 
             for (int moveCounter = 1; ; moveCounter++)
             {
-                // Console.WriteLine($"Calculating move {moveCounter}");
+                if (reachablePositions.Any(m => m.Coordinates == start))
+                {
+                    Visualize(/*true*/);
+                    break;
+                }
+
+                Console.Write($"Move {moveCounter}, {(moveCounter % 10 == 0 ? Environment.NewLine : "")}");
+
                 int startingListLength = reachablePositions.Count;
                 for (int listcounter = 0; listcounter < startingListLength; listcounter++) 
                 {
                     RankedCoordinate moveToConsider = reachablePositions.ElementAt(listcounter);
                     if (moveToConsider.Score < moveCounter-1)
                     {
-                        continue;  // only consider new moves from position(s) found in the previous round
+                        continue;  // only evaluate moves from position(s) found in the previous round
                     }
                     List<Coordinates> neighbors = GetNeighbors(moveToConsider.Row, moveToConsider.Col).ToList();
                     var validMoves = GetValidMoves(moveToConsider.Coordinates, neighbors);
                     foreach (Coordinates neighbor in validMoves)
                     {
                         List<Coordinates> possibleMoveCoordinates = reachablePositions.Select(m => m.Coordinates).ToList();
-                        bool yesOrNo = possibleMoveCoordinates.Contains(neighbor);
                         if (possibleMoveCoordinates.Contains(neighbor, new CoordinatesComparer()))
                         {
-                            continue;
+                            continue;  // don't add new positions that have already been added
                         }
                         else
                         {
@@ -177,71 +183,67 @@ namespace Day12
                         }
                     }
                 }
+            }
+        }
 
-                // delegate function to write the path coordinates to the console
-                Action<RankedCoordinate> DocumentPath = pos => { };
-                DocumentPath = pos =>
+        internal static void Visualize(bool slow = false)
+        {
+            // delegate function to write the path coordinates to the console
+            Action<RankedCoordinate> DocumentPath = pos => { };
+            DocumentPath = pos =>
+            {
+                Console.WriteLine($"Coordinates {pos.Row},{pos.Col}, elevation {pos.Elevation}, steps from end position {pos.Score}");
+                if (pos.Predecessor is not null)
                 {
-                    Console.WriteLine($"Coordinates {pos.Row},{pos.Col}, elevation {pos.Elevation}, steps from end position {pos.Score}");
-                    if (pos.Predecessor is not null)
-                    {
-                        DocumentPath(pos.Predecessor);
-                    }
-                };
+                    DocumentPath(pos.Predecessor);
+                }
+            };
 
-                if (reachablePositions.Any(m => m.Coordinates == start))
+            RankedCoordinate FoundStart = reachablePositions.First(m => m.Elevation == Elevation.S);
+            RankedCoordinate FirstA = reachablePositions.First(m => (int)m.Elevation == (int)Elevation.a);
+
+            DocumentPath.Invoke(FoundStart);
+            DocumentPath.Invoke(FirstA);
+
+            RankedCoordinate[][]? MapFromStart = Map.Clone() as RankedCoordinate[][];
+            char[][] fileContents = new char[0][];
+            foreach (Elevation[] line in Map)
+            {
+                char[] mapline = line.Select(p => p.ToString().First()).ToArray();
+                fileContents = fileContents.Append(mapline).ToArray();
+            }
+            Console.Clear();
+            for (int i = 0; i < fileContents.Length; i++)
+            {
+                for (int j = 0; j < fileContents[i].Length; j++)
                 {
-                    RankedCoordinate FoundStart = reachablePositions.First(m => m.Coordinates == start);
-                    DocumentPath.Invoke(FoundStart);
-
-                    RankedCoordinate FirstA = reachablePositions.First(m => (int)m.Elevation == (int)Elevation.a);
-                    DocumentPath.Invoke(FoundStart);
-
-                    RankedCoordinate[][]? MapFromStart = Map.Clone() as RankedCoordinate[][];
-                    char[][] fileContents = new char[0][];
-                    foreach (Elevation[] line in Map)
-                    {
-                        char[] mapline = line.Select(p => p.ToString().First()).ToArray();
-                        fileContents = fileContents.Append(mapline).ToArray();
-                    }
-                    Console.Clear();
-                    for (int i = 0; i < fileContents.Length; i++)
-                    {
-                        for (int j = 0; j < fileContents[i].Length; j++)
-                        {
-                            Console.SetCursorPosition(j,i);
-                            Console.Write(fileContents[i][j]);
-                        }
-                    }
-
-                    List<RankedCoordinate> redCoordinates = new List<RankedCoordinate>();
-                    Console.WriteLine();
-                    Console.WriteLine($"Part 1: The route has {FoundStart.Score} moves.");
-                    Console.WriteLine($"Part 2: The route has {FirstA.Score} moves");
-                    Console.BackgroundColor = ConsoleColor.Red;
-                    for (RankedCoordinate position = FoundStart; position is not null; position = position.Predecessor)
-                    {
-                        Console.SetCursorPosition(position.Col, position.Row);
-                        Console.Write('1');
-                        redCoordinates.Add(position);
-                        //Thread.Sleep(1);
-                    }
-                    for (RankedCoordinate position = FirstA; position is not null; position = position.Predecessor)
-                    {
-                        var enc = Console.OutputEncoding;
-                        Console.OutputEncoding = System.Text.UnicodeEncoding.Default;
-                        Console.SetCursorPosition(position.Col, position.Row);
-                        Console.BackgroundColor = redCoordinates.Contains(position) ? ConsoleColor.DarkYellow : ConsoleColor.Green;
-                        Console.Write(redCoordinates.Contains(position) ? '\u00BD' : '2');
-                        //Thread.Sleep(1);
-                    }
-
-                    Console.BackgroundColor = ConsoleColor.Black;
-                    Console.SetCursorPosition(0, fileContents.Length+3);
-
-                    break;
+                    Console.SetCursorPosition(j, i);
+                    Console.Write(fileContents[i][j]);
                 }
             }
+
+            Console.WriteLine();
+            Console.WriteLine($"Part 1: The route has {FoundStart.Score} moves.");
+            Console.WriteLine($"Part 2: The route has {FirstA.Score} moves");
+            Console.BackgroundColor = ConsoleColor.Red;
+            List<RankedCoordinate> redCoordinates = new List<RankedCoordinate>();
+            for (RankedCoordinate position = FoundStart; position is not null; position = position.Predecessor)
+            {
+                Console.SetCursorPosition(position.Col, position.Row);
+                Console.Write('1');
+                redCoordinates.Add(position);
+                if (slow) Thread.Sleep(1);
+            }
+            for (RankedCoordinate position = FirstA; position is not null; position = position.Predecessor)
+            {
+                Console.SetCursorPosition(position.Col, position.Row);
+                Console.BackgroundColor = redCoordinates.Contains(position) ? ConsoleColor.DarkYellow : ConsoleColor.Green;
+                Console.Write(redCoordinates.Contains(position) ? '\u00BD' : '2');
+                if (slow) Thread.Sleep(1);
+            }
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(0, fileContents.Length+3);
         }
 
         static void ReadData(string filename)
