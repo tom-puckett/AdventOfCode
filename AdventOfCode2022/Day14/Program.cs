@@ -17,20 +17,26 @@ namespace Day14
 
         static void Main(string[] args)
         {
-            ReadData("InputData.txt");
-            //ReadData("TestData.txt");
+            Console.Clear();
 
-            RenderInitialMap();
-            Console.SetCursorPosition(0, 0);
-
-            int grainCount = 0;
-            while (AddGrainOfSand())
+            foreach (int puzzlePart in new int[] { 1, 2})
             {
-                grainCount++;
+                ReadData("InputData.txt");
+                //ReadData("TestData.txt");
+
+                RenderInitialMap();
+                Console.SetCursorPosition(0, 0);
+
+                int grainCount = 0;
+                while (AddGrainOfSand(puzzlePart))
+                {
+                    grainCount++;
+                }
+
+                Console.SetCursorPosition(0, mapMaxRow + 4 + puzzlePart);
+                Console.WriteLine($"Part {puzzlePart}: {grainCount} grains of sand were retained.");
             }
 
-            Console.SetCursorPosition(0, mapMaxRow + 4);
-            Console.WriteLine($"{grainCount} grains of sand were retained.");
         }
 
         static void ReadData(string filename)
@@ -57,12 +63,12 @@ namespace Day14
             }
             AllRockCoordinates = RockPaths.SelectMany(c => c).ToList();
 
-            mapMinCol = AllRockCoordinates.Select(c => c.col).Min();
-            mapMaxCol = AllRockCoordinates.Select(c => c.col).Max();
             mapMaxRow = AllRockCoordinates.Select(c => c.row).Max();
+            mapMinCol = StartLocation.c - mapMaxRow - 1;
+            mapMaxCol = StartLocation.c + mapMaxRow + 1;
             for (int row=0; row <= mapMaxRow + 1; row++)  // One empty row at the bottom to detect sand falling out
             {
-                char[] newMapRow = Enumerable.Repeat(OpenChar, mapMaxCol + 2).ToArray();
+                char[] newMapRow = Enumerable.Repeat(OpenChar, mapMaxCol+2).ToArray();
                 foreach (var rockInThisRow in AllRockCoordinates.Where(c => c.row == row))
                 {
                     newMapRow[rockInThisRow.col] = RockChar;
@@ -75,26 +81,51 @@ namespace Day14
 
         static void RenderInitialMap()
         {
-            Console.Clear();
+            int consoleColumnLimit = int.MaxValue;
             for (int c = 0; c < mapMaxCol - mapMinCol + 3; c++)
             {
                 for (int r = 0; r <= mapMaxRow + 1; r++)
                 {
                     (int col, int row) mapCoordinates = GetMapCoordinates((c, r));
-                    Console.SetCursorPosition(c, r);
-                    Console.Write(map[mapCoordinates.row][mapCoordinates.col]);
+                    if (mapCoordinates.col < consoleColumnLimit)
+                    {
+                        try
+                        {
+                            Console.SetCursorPosition(c, r);
+                            Console.Write(map[mapCoordinates.row][mapCoordinates.col]);
+                        }
+                        catch
+                        {
+                            consoleColumnLimit= mapCoordinates.col;
+                        }
+                    }
                 }
             }
             for (int r = 0; r <= mapMaxRow + 1; r++)
             {
                 (int col, int row) mapCoordinates = GetMapCoordinates((0, r));
-                Console.SetCursorPosition(mapMaxCol - mapMinCol + 4, r);
-                Console.WriteLine("{0,3:D1}", mapCoordinates.row);
+                if (mapCoordinates.col < consoleColumnLimit)
+                {
+                    try
+                    {
+                        Console.SetCursorPosition(mapMaxCol - mapMinCol + 4, r);
+                        Console.WriteLine("{0,3:D1}", mapCoordinates.row);
+                    }
+                    catch
+                    {
+                        consoleColumnLimit= mapCoordinates.col;
+                    }
+                }
             }
         }
 
-        static bool AddGrainOfSand()
+        static bool AddGrainOfSand(int part)
         {
+            if (map[StartLocation.r][StartLocation.c]== SandChar)
+            {
+                return false;
+            }
+
             List<(int r,int c)> validMoves = new List<(int, int)> {(1,0), (1,-1), (1,1), (0,0) };
             (int r, int c) grainLocation = StartLocation;
 
@@ -112,10 +143,22 @@ namespace Day14
                         break;
                     }
                 }
-
-                if (grainLocation.r > mapMaxRow || grainLocation == StartLocation)
+                switch (part) 
                 {
-                    return false;
+                    case 1:
+                        if (grainLocation.r > mapMaxRow || grainLocation == StartLocation)
+                        {
+                            return false;
+                        }
+                        break;
+                    case 2:
+                        if (grainLocation.r == mapMaxRow + 1)
+                        {
+                            map[grainLocation.r][grainLocation.c] = SandChar;
+                            RenderChar((grainLocation.r, grainLocation.c), SandChar);
+                            return true;
+                        }
+                        break;
                 }
             }
             while (grainLocation != storedLocation);
@@ -128,8 +171,11 @@ namespace Day14
         internal static void RenderChar((int row, int col) location, char c)
         {
             (int col, int row) screenCoordinates = GetScreenCoordinates((location.col, location.row));
-            Console.SetCursorPosition(screenCoordinates.col, screenCoordinates.row);
-            Console.Write(c);
+            if (screenCoordinates.col < Console.BufferWidth)
+            {
+                Console.SetCursorPosition(screenCoordinates.col, screenCoordinates.row);
+                Console.Write(c);
+            }
         }
 
         static void AddPath(List<(int col, int row)> list, (int col, int row) to)
