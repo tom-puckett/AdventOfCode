@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Day14
+﻿namespace Day14
 {
     internal class Program
     {
@@ -36,7 +34,6 @@ namespace Day14
                 Console.SetCursorPosition(0, mapMaxRow + 4 + puzzlePart);
                 Console.WriteLine($"Part {puzzlePart}: {grainCount} grains of sand were retained.");
             }
-
         }
 
         static void ReadData(string filename)
@@ -57,7 +54,7 @@ namespace Day14
                                                  .Aggregate(new List<(int, int)> { lineCoordinatesList[0] },
                                                             (l, next) =>
                                                             {
-                                                                AddPath(l, next);
+                                                                AddPathToMap(l, next);
                                                                 return l;
                                                             }));
             }
@@ -66,7 +63,7 @@ namespace Day14
             mapMaxRow = AllRockCoordinates.Select(c => c.row).Max();
             mapMinCol = StartLocation.c - mapMaxRow - 1;
             mapMaxCol = StartLocation.c + mapMaxRow + 1;
-            for (int row=0; row <= mapMaxRow + 1; row++)  // One empty row at the bottom to detect sand falling out
+            for (int row=0; row <= mapMaxRow + 1; row++)  // empty row at the bottom to detect sand falling out (part 1)
             {
                 char[] newMapRow = Enumerable.Repeat(OpenChar, mapMaxCol+2).ToArray();
                 foreach (var rockInThisRow in AllRockCoordinates.Where(c => c.row == row))
@@ -81,40 +78,25 @@ namespace Day14
 
         static void RenderInitialMap()
         {
-            int consoleColumnLimit = int.MaxValue;
             for (int c = 0; c < mapMaxCol - mapMinCol + 3; c++)
             {
                 for (int r = 0; r <= mapMaxRow + 1; r++)
                 {
                     (int col, int row) mapCoordinates = GetMapCoordinates((c, r));
-                    if (mapCoordinates.col < consoleColumnLimit)
+                    if (c < Console.BufferWidth)
                     {
-                        try
-                        {
-                            Console.SetCursorPosition(c, r);
-                            Console.Write(map[mapCoordinates.row][mapCoordinates.col]);
-                        }
-                        catch
-                        {
-                            consoleColumnLimit= mapCoordinates.col;
-                        }
+                        Console.SetCursorPosition(c, r);
+                        Console.Write(map[mapCoordinates.row][mapCoordinates.col]);
                     }
                 }
             }
             for (int r = 0; r <= mapMaxRow + 1; r++)
             {
                 (int col, int row) mapCoordinates = GetMapCoordinates((0, r));
-                if (mapCoordinates.col < consoleColumnLimit)
+                if (mapMaxCol - mapMinCol + 4 < Console.BufferWidth)
                 {
-                    try
-                    {
-                        Console.SetCursorPosition(mapMaxCol - mapMinCol + 4, r);
-                        Console.WriteLine("{0,3:D1}", mapCoordinates.row);
-                    }
-                    catch
-                    {
-                        consoleColumnLimit= mapCoordinates.col;
-                    }
+                    Console.SetCursorPosition(mapMaxCol - mapMinCol + 4, r);
+                    Console.WriteLine("{0,3:D1}", mapCoordinates.row);
                 }
             }
         }
@@ -178,7 +160,7 @@ namespace Day14
             }
         }
 
-        static void AddPath(List<(int col, int row)> list, (int col, int row) to)
+        static void AddPathToMap(List<(int col, int row)> list, (int col, int row) to)
         {
             bool moveUpDown = list.Last().col == to.col;
 
