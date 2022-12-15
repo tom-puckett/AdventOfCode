@@ -156,7 +156,7 @@ namespace Day13
                         tokens.Add(tokenBuilder.ToString());
                         tokenBuilder.Clear();
                         break;
-                    case char _ when index == interiorValue.Length-1:
+                    case char _ when index == interiorValue.Length - 1:
                         tokens.Add(tokenBuilder.ToString());
                         break;
                     case '[':

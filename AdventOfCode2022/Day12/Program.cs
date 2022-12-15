@@ -154,7 +154,7 @@ namespace Day12
             {
                 if (reachablePositions.Any(m => m.Coordinates == start))
                 {
-                    Visualize(/*true*/);
+                    Visualize(true);
                     break;
                 }
 

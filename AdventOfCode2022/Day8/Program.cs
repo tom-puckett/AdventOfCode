@@ -64,7 +64,7 @@
             for (int i = x+1; i < forest[y].Length; i++)
             {
                 below.Add(forest[i][y]);
-            ;};
+            };
 
             return left.All(t => t < forest[x][y]) ||
                   above.All(t => t < forest[x][y]) ||
