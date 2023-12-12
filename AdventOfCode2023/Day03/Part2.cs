@@ -41,7 +41,7 @@ public class Part2
                         }
                         return accum;
                     }
-                    );
+                );
 
                 if (verbose) Console.WriteLine($"At starIndex {starIndex}, found numbers {string.Join(", ", neighboringTokens)}");
                 if (neighboringTokens.Count > 1)
